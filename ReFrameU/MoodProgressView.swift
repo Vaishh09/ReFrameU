@@ -1,71 +1,125 @@
-//
-//  MoodProgressView.swift
-//  ReFrameU
-//
-//  Created by Vaishnavi Mahajan on 4/3/25.
-//
-
-
 import SwiftUI
 
 struct MoodProgressView: View {
-    @State private var moodLog: [(String, Int)] = []
-    @State private var selectedMood = 3
+    @State private var moodLog: [String] = []
     @State private var level = 1
+    @State private var streak = 0
 
     let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("🌿 Mood Tracker")
-                .font(.title2)
-                .fontWeight(.semibold)
+    let dayPlants: [String: String] = [
+        "Mon": "🌱",
+        "Tue": "🌿",
+        "Wed": "🌷",
+        "Thu": "🌸",
+        "Fri": "🌼",
+        "Sat": "🪴",
+        "Sun": "🌳"
+    ]
 
-            Picker("Today’s Mood", selection: $selectedMood) {
-                ForEach(1...5, id: \.self) { mood in
-                    Text("Mood \(mood)").tag(mood)
-                }
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
-
-            Button("Log Today’s Mood") {
-                logMood()
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.green)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-
-            Text("🌸 Garden Level: \(level)")
-                .font(.headline)
-
-            HStack(spacing: 12) {
-                ForEach(moodLog.indices, id: \.self) { i in
-                    VStack {
-                        Text("\(moodLog[i].1)")
-                            .font(.caption)
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(Color.green)
-                            .frame(width: 20, height: CGFloat(moodLog[i].1) * 15)
-                        Text(moodLog[i].0)
-                            .font(.caption2)
-                    }
-                }
-            }
-
-            Spacer()
+    var plantEmoji: String {
+        switch level {
+        case 1: return "🌱"
+        case 2: return "🌿"
+        case 3: return "🌸"
+        case 4: return "🌼"
+        default: return "🌳"
         }
-        .padding()
+    }
+
+    var weeksCount: Int {
+        (moodLog.count + 6) / 7
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.green.opacity(0.2),
+                        Color.blue.opacity(0.2)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
+
+                ScrollView {
+                    VStack(spacing: 20) {
+                        Text("🌿 Mood Tracker")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+
+                        NavigationLink("Reflect & Reframe") {
+                            ThoughtInputView()
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+
+                        Button("Did you log today?") {
+                            logMood()
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.teal.opacity(0.7))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+
+                        Text("\(plantEmoji) Garden Level: \(level)")
+                            .font(.headline)
+
+                        if streak >= 3 {
+                            Text("🔥 Streak: \(streak) days!")
+                                .font(.subheadline)
+                                .foregroundColor(.orange)
+                        }
+
+                        VStack(spacing: 12) {
+                            ForEach(0..<weeksCount, id: \.self) { weekIndex in
+                                HStack(spacing: 12) {
+                                    ForEach(0..<7, id: \.self) { dayIndex in
+                                        let overallIndex = weekIndex * 7 + dayIndex
+                                        if overallIndex < moodLog.count {
+                                            let day = moodLog[overallIndex]
+                                            VStack(spacing: 4) {
+                                                Text(dayPlants[day] ?? "🌿")
+                                                    .font(.largeTitle)
+                                                Text(day)
+                                                    .font(.caption2)
+                                            }
+                                        } else {
+                                            VStack(spacing: 4) {
+                                                Text("❔")
+                                                    .font(.largeTitle)
+                                                Text("...")
+                                                    .font(.caption2)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.bottom, 20)
+                    }
+                    .padding()
+                }
+            }
+        }
     }
 
     func logMood() {
         let weekday = days[moodLog.count % 7]
-        moodLog.append((weekday, selectedMood))
-
+        moodLog.append(weekday)
         if moodLog.count % 3 == 0 {
             level += 1
         }
+        streak += 1
     }
+}
+
+#Preview {
+    MoodProgressView()
 }

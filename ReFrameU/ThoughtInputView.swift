@@ -1,87 +1,93 @@
-//
-//  ThoughtInputView.swift
-//  ReFrameU
-//
-//  Created by Vaishnavi Mahajan on 4/3/25.
-//
-
 import SwiftUI
 
 struct ThoughtInputView: View {
     @State private var userThought = ""
-    @State private var reframes: [String] = []
-    @State private var isLoading = false
+    @State private var selectedMoodIndex = 0
 
-    @AppStorage("savedReframes") private var savedReframes: String = ""
+    let moods: [(name: String, emoji: String)] = [
+        ("Happy", "😄"),
+        ("Sad", "😢"),
+        ("Anxious", "😰"),
+        ("Peaceful", "🧘‍♀️"),
+        ("Angry", "😡"),
+        ("Nervous", "😬"),
+        ("Excited", "🤩"),
+        ("Tired", "😴"),
+        ("Motivated", "💪"),
+        ("Grateful", "🙏"),
+        ("Overwhelmed", "🥵"),
+        ("Content", "😊"),
+        ("Hopeful", "🌈")
+    ]
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Text("Reflect on Your Thought")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+        NavigationStack {
+            ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.green.opacity(0.2),
+                        Color.blue.opacity(0.2)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
 
-                TextEditor(text: $userThought)
-                    .frame(height: 150)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                VStack(spacing: 20) {
+                    Text("How are you feeling today?")
+                        .font(.headline)
 
-                Button("Generate Reframes") {
-                    generateReframes()
-                }
-                .disabled(userThought.isEmpty)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-
-                if isLoading {
-                    ProgressView("Reframing with care...")
-                }
-
-                ForEach(reframes.indices, id: \.self) { i in
-                    HStack {
-                        Text("🌱 \(reframes[i])")
-                            .padding(.vertical, 6)
-                        Spacer()
-                        Button {
-                            saveReframe(reframes[i])
-                        } label: {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
+                    Picker("Select Mood", selection: $selectedMoodIndex) {
+                        ForEach(moods.indices, id: \.self) { i in
+                            HStack {
+                                Text(moods[i].emoji)
+                                    .font(.largeTitle)
+                                Text(moods[i].name)
+                            }
+                            .tag(i)
                         }
                     }
-                    .padding(.horizontal)
-                    .background(Color.green.opacity(0.1))
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(height: 150)
+                    .clipped()
+
+                    Text("Reflect on Your Thought")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    TextEditor(text: $userThought)
+                        .frame(height: 150)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+
+                    Button("Generate Reframed Thought") {
+                    }
+                    .disabled(userThought.isEmpty)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green)
+                    .foregroundColor(.white)
                     .cornerRadius(12)
+
+                    NavigationLink(destination: MoodProgressView()) {
+                        Text("Check Your Garden")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.teal.opacity(0.7))
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+
+                    Spacer()
                 }
-
-                Spacer()
+                .padding()
+                .navigationTitle("Reframe a Thought")
             }
-            .padding()
-            .navigationTitle("Reframe a Thought")
         }
     }
+}
 
-    func generateReframes() {
-        isLoading = true
-        reframes = []
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            reframes = [
-                "Try to look at this situation logically...",
-                "There might be something positive hidden in this...",
-                "Be kind to yourself. You’re doing your best."
-            ]
-            isLoading = false
-        }
-    }
-
-    func saveReframe(_ text: String) {
-        var saved = Set(savedReframes.components(separatedBy: "|").filter { !$0.isEmpty })
-        saved.insert(text)
-        savedReframes = saved.joined(separator: "|")
-    }
+#Preview {
+    ThoughtInputView()
 }
