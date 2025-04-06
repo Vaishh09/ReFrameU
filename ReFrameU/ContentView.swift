@@ -5,20 +5,27 @@
 //  Created by Vaishnavi Mahajan on 4/3/25.
 //
 
+
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+        TabView {
+            ThoughtInputView()
+                .tabItem {
+                    Label("Reframe", systemImage: "bubble.left.and.bubble.right")
+                }
 
-#Preview {
-    ContentView()
+            ToolboxView()
+                .tabItem {
+                    Label("Toolbox", systemImage: "archivebox")
+                }
+
+            MoodProgressView()
+                .tabItem {
+                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
+                }
+        }
+        .accentColor(Color("AccentColor"))
+    }
 }
