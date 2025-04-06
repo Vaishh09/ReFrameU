@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MoodProgressView: View {
+    var moodToLog: String? = nil
     @State private var moodLog: [String] = []
     @State private var level = 1
     @State private var streak = 0
@@ -60,7 +61,11 @@ struct MoodProgressView: View {
                         .cornerRadius(12)
 
                         Button("Did you log today?") {
-                            logMood()
+                            if let mood = moodToLog {
+                                logMood(for: mood)
+                            } else {
+                                print("❗ No mood passed")
+                            }
                         }
                         .padding()
                         .frame(maxWidth: .infinity)
@@ -108,18 +113,21 @@ struct MoodProgressView: View {
                 }
             }
         }
+        .onAppear {
+                    if let mood = moodToLog {
+                        logMood(for: mood)
+                    }
+                }
     }
 
-    func logMood() {
-        let weekday = days[moodLog.count % 7]
-        moodLog.append(weekday)
-        if moodLog.count % 3 == 0 {
-            level += 1
+    func logMood(for mood: String? = nil) {
+            let moodName = mood ?? days[moodLog.count % 7]
+            moodLog.append(moodName)
+            if moodLog.count % 3 == 0 {
+                level += 1
+            }
+            streak += 1
+        FirestoreManager.shared.saveMood(name: moodName, emoji: "🌿")
         }
-        streak += 1
-    }
 }
 
-#Preview {
-    MoodProgressView()
-}

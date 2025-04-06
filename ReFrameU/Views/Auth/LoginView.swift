@@ -1,15 +1,15 @@
 //
-//  CreateAccountView.swift
+//  LoginView.swift
 //  ReFrameU
 //
 //  Created by Vaishnavi Mahajan on 4/3/25.
 //
 
+
 import SwiftUI
 
-struct CreateAccountView: View {
+struct LoginView: View {
     @Binding var isAuthenticated: Bool
-    @State private var name = ""
     @State private var email = ""
     @State private var password = ""
 
@@ -19,36 +19,44 @@ struct CreateAccountView: View {
 
             VStack(spacing: 20) {
                 Spacer()
-
+                
                 VStack(spacing: 16) {
-                    Text("Create Account 🌱")
+                    Text("Welcome Back 🌿")
                         .font(.title2)
                         .fontWeight(.bold)
-
-                    TextField("Full Name", text: $name)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                        .frame(maxWidth: .infinity)
-
+                    
                     TextField("Email", text: $email)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                         .frame(maxWidth: .infinity)
-
+                    
                     SecureField("Password", text: $password)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                         .frame(maxWidth: .infinity)
-
+                    
+                    Button("Forgot Password?") {}
+                        .font(.footnote)
+                        .foregroundColor(.green)
+                    
                     Button(action: {
-                        if !email.isEmpty && !password.isEmpty && !name.isEmpty {
-                            isAuthenticated = true
+                        if !email.isEmpty && !password.isEmpty {
+                            AuthManager.shared.login(email: email, password: password) { result in
+                                switch result {
+                                case .success:
+                                    print("✅ Login successful")
+                                    DispatchQueue.main.async {
+                                        isAuthenticated = true
+                                    }
+                                case .failure(let error):
+                                    print("❌ Login failed:", error.localizedDescription)
+                                }
+                            }
                         }
                     }) {
-                        Text("Sign Up")
+                        Text("Login")
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -62,10 +70,15 @@ struct CreateAccountView: View {
                 .cornerRadius(16)
                 .shadow(radius: 5)
                 .padding(.horizontal, 24)
-
+                
                 Spacer()
-
+                
+         
             }
         }
     }
+}
+
+#Preview{
+    
 }
