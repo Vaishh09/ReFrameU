@@ -43,10 +43,20 @@ struct LoginView: View {
                     
                     Button(action: {
                         if !email.isEmpty && !password.isEmpty {
-                            isAuthenticated = true
+                            AuthManager.shared.login(email: email, password: password) { result in
+                                switch result {
+                                case .success:
+                                    print("✅ Login successful")
+                                    DispatchQueue.main.async {
+                                        isAuthenticated = true
+                                    }
+                                case .failure(let error):
+                                    print("❌ Login failed:", error.localizedDescription)
+                                }
+                            }
                         }
                     }) {
-                        Text("Log In")
+                        Text("Login")
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                             .padding()

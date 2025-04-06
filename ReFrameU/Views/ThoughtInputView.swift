@@ -1,10 +1,3 @@
-//
-//  ThoughtInputView.swift
-//  ReFrameU
-//
-//  Created by Vaishnavi Mahajan on 4/3/25.
-//
-
 import SwiftUI
 
 struct ThoughtRequest: Codable {
@@ -19,6 +12,7 @@ struct ReframeResponse: Codable {
 
 struct ThoughtInputView: View {
     @State private var userThought = ""
+    @State private var selectedMoodIndex = 0
     @State private var reframes: [String] = []
     @State private var isLoading = false
     @State private var selectedReframe: String? = nil
@@ -26,69 +20,119 @@ struct ThoughtInputView: View {
 
     @AppStorage("savedReframes") private var savedReframes: String = ""
 
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Text("Reflect on Your Thought")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+    let moods: [(name: String, emoji: String)] = [
+        ("Happy", "😄"), ("Sad", "😢"), ("Anxious", "😰"), ("Peaceful", "🧘‍♀️"),
+        ("Angry", "😡"), ("Nervous", "😬"), ("Excited", "🤩"), ("Tired", "😴"),
+        ("Motivated", "💪"), ("Grateful", "🙏"), ("Overwhelmed", "🥵"),
+        ("Content", "😊"), ("Hopeful", "🌈")
+    ]
 
-                TextEditor(text: $userThought)
-                    .frame(height: 150)
-                    .padding()
-                    .background(Color(.systemGray6))
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.green.opacity(0.2),
+                        Color.blue.opacity(0.2)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
+
+                VStack(spacing: 16) {
+                    VStack(spacing: 8) {
+                        Text("How are you feeling today?")
+                            .font(.headline)
+
+                        Picker("Select Mood", selection: $selectedMoodIndex) {
+                            ForEach(moods.indices, id: \.self) { i in
+                                HStack {
+                                    Text(moods[i].emoji)
+                                        .font(.largeTitle)
+                                    Text(moods[i].name)
+                                }
+                                .tag(i)
+                            }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                        .frame(height: 120)
+                        .clipped()
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Reflect on Your Thought")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+
+                        TextEditor(text: $userThought)
+                            .frame(height: 120)
+                            .padding(6)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                    }
+
+                    Button("Generate Reframes") {
+                        print("🧪 Sending thought to backend: \(userThought)")
+                        generateReframes()
+                    }
+                    .disabled(userThought.isEmpty)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green)
+                    .foregroundColor(.white)
                     .cornerRadius(12)
 
-                Button("Generate Reframes") {
-                    generateReframes()
-                }
-                .disabled(userThought.isEmpty)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+                    if isLoading {
+                        ProgressView("Reframing with care...")
+                    }
 
-                if isLoading {
-                    ProgressView("Reframing with care...")
-                }
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            if reframes.isEmpty && !isLoading {
+                                Text("No reframes to show yet.")
+                                    .foregroundColor(.gray)
+                            }
+                            ForEach(reframes, id: \.self) { reframe in
+                                VStack(alignment: .leading) {
+                                    HStack(alignment: .top) {
+                                        Text(reframe)
+                                            .foregroundColor(.black)
+                                            .multilineTextAlignment(.leading)
 
-                ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(reframes, id: \.self) { reframe in
-                            Button(action: {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    selectedReframe = reframe
-                                    showPopup = true
-                                }
-                            }) {
-                                HStack(alignment: .top) {
-                                    Text(reframe)
-                                        .foregroundColor(.black)
-                                        .multilineTextAlignment(.leading)
+                                        Spacer()
 
-                                    Spacer()
-
-                                    Button(action: {
-                                        saveReframe(reframe)
-                                    }) {
-                                        Image(systemName: "tray.and.arrow.down.fill")
-                                            .foregroundColor(.green)
+                                        Button(action: {
+                                            print("💾 Saved reframe: \(reframe)")
+                                            saveReframe(reframe)
+                                        }) {
+                                            Image(systemName: "tray.and.arrow.down.fill")
+                                                .foregroundColor(.green)
+                                        }
                                     }
                                 }
                                 .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(red: 1.0, green: 0.95, blue: 0.75)) // butter yellow
+                                .background(Color(red: 1.0, green: 0.95, blue: 0.75))
                                 .cornerRadius(10)
                             }
                         }
+                        .padding(.top, 10)
+                    }
+
+                    NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
+                        Text("Check Your Garden")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.teal.opacity(0.7))
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
                     }
                 }
-            }
-            .padding()
-            .navigationTitle("Reframe a Thought")
-            .sheet(isPresented: $showPopup) {
-                ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
+                .padding(.horizontal)
+                .navigationTitle("Reframe a Thought")
+                .sheet(isPresented: $showPopup) {
+                    ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
+                }
             }
         }
     }
@@ -101,7 +145,7 @@ struct ThoughtInputView: View {
             isLoading = false
 
             guard let responseText = responseText else {
-                print("No response from Reffie")
+                print("🚫 No response from Reffie")
                 return
             }
 
@@ -116,24 +160,24 @@ struct ThoughtInputView: View {
             }
 
             DispatchQueue.main.async {
-                reframes = parsed
+                print("✅ Parsed reframes: \(parsed)")
+                withAnimation {
+                    reframes = parsed
+                }
             }
         }
     }
 
     func saveReframe(_ text: String) {
-        var saved = Set(savedReframes.components(separatedBy: "|").filter { !$0.isEmpty })
-        saved.insert(text)
-        savedReframes = saved.joined(separator: "|")
+        FirestoreManager.shared.saveReframe(text: text) { error in
+            if let error = error {
+                print("❌ Firestore save failed:", error.localizedDescription)
+            } else {
+                print("✅ Reframe saved to Firestore")
+            }
+        }
     }
 
-    func labelFrom(_ reframe: String) -> String {
-        return reframe.components(separatedBy: ":").first ?? "Reframe"
-    }
-
-    func bodyFrom(_ reframe: String) -> String {
-        return reframe.components(separatedBy: ":").dropFirst().joined(separator: ":").trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }
 
 struct ReframePopup: View {
@@ -158,6 +202,7 @@ struct ReframePopup: View {
 
             HStack(spacing: 16) {
                 Button(action: {
+                    print("📦 Popup save: \(reframe)")
                     saveAction(reframe)
                     dismiss()
                 }) {

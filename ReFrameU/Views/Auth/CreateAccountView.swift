@@ -45,7 +45,17 @@ struct CreateAccountView: View {
 
                     Button(action: {
                         if !email.isEmpty && !password.isEmpty && !name.isEmpty {
-                            isAuthenticated = true
+                            AuthManager.shared.signUp(email: email, password: password) { result in
+                                switch result {
+                                case .success:
+                                    print("✅ Successfully signed up")
+                                    DispatchQueue.main.async {
+                                        isAuthenticated = true
+                                    }
+                                case .failure(let error):
+                                    print("❌ Signup failed:", error.localizedDescription)
+                                }
+                            }
                         }
                     }) {
                         Text("Sign Up")

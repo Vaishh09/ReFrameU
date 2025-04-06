@@ -1,14 +1,7 @@
-//
-//  ToolboxView.swift
-//  ReFrameU
-//
-//  Created by Vaishnavi Mahajan on 4/3/25.
-//
-
 import SwiftUI
 
 struct ToolboxView: View {
-    @AppStorage("savedReframes") private var savedReframes: String = ""
+    @State private var firestoreReframes: [String] = []
 
     var body: some View {
         NavigationView {
@@ -17,16 +10,27 @@ struct ToolboxView: View {
                     .font(.title3)
                     .fontWeight(.bold)
 
-                List {
-                    ForEach(savedReframes.components(separatedBy: "|").filter { !$0.isEmpty }, id: \.self) { reframe in
-                        Text("🌱 \(reframe)")
-                            .padding(.vertical, 4)
+                if firestoreReframes.isEmpty {
+                    Text("You haven’t saved any reframes yet.")
+                        .foregroundColor(.gray)
+                        .padding(.top)
+                } else {
+                    List {
+                        ForEach(firestoreReframes, id: \.self) { reframe in
+                            Text("🌱 \(reframe)")
+                                .padding(.vertical, 4)
+                        }
                     }
+                    .listStyle(.insetGrouped)
                 }
-                .listStyle(.insetGrouped)
             }
             .padding()
             .navigationTitle("Toolbox")
+            .onAppear {
+                FirestoreManager.shared.fetchReframes { reframes in
+                    firestoreReframes = reframes
+                }
+            }
         }
     }
 }
