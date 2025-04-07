@@ -1,4 +1,6 @@
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct ThoughtRequest: Codable {
     let userThought: String
@@ -17,7 +19,11 @@ struct ThoughtInputView: View {
     @State private var isLoading = false
     @State private var selectedReframe: String? = nil
     @State private var showPopup: Bool = false
-
+    @State private var moodSlider: Double = 50
+    @State private var affirmation = ""
+    @State private var challengePrompt = ""
+    
+    @AppStorage("isAuthenticated") private var isAuthenticated: Bool = true
     @AppStorage("savedReframes") private var savedReframes: String = ""
 
     let moods: [(name: String, emoji: String)] = [
@@ -27,109 +33,177 @@ struct ThoughtInputView: View {
         ("Content", "😊"), ("Hopeful", "🌈")
     ]
 
+    let affirmations = [
+        "You’re doing better than you think 🌟",
+        "Small steps matter 💚",
+        "Breathe. You've got this. 💫",
+        "Every thought matters 🧠"
+    ]
+
+    let challenges = [
+        "Reframe a thought using only 5 words.",
+        "Be your own best friend.",
+        "Imagine someone kind replied to you.",
+        "What's the silver lining here?"
+    ]
+
+    var moodLabel: String {
+        switch moodSlider {
+        case 0..<30: return "😢 Low"
+        case 30..<70: return "😐 Neutral"
+        default: return "😄 High"
+        }
+    }
+
+    var plantEmoji: String {
+        switch reframes.count {
+        case 0...2: return "🌱"
+        case 3...5: return "🌿"
+        case 6...8: return "🌸"
+        default: return "🌳"
+        }
+    }
+
+    var vibeBadge: String {
+        let mood = moods[selectedMoodIndex].name
+        switch mood {
+        case "Angry": return "Fire Starter 🔥"
+        case "Tired": return "Gentle Cloud ☁️"
+        case "Happy": return "Joy Jumper 🌟"
+        default: return "Mind Explorer 🧭"
+        }
+    }
+
+    var backgroundGradient: LinearGradient {
+        switch moods[selectedMoodIndex].name {
+        case "Angry": return LinearGradient(colors: [.red.opacity(0.3), .orange.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        case "Peaceful": return LinearGradient(colors: [.purple.opacity(0.3), .blue.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        case "Sad": return LinearGradient(colors: [.blue.opacity(0.3), .gray.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        default: return LinearGradient(colors: [.purple.opacity(0.15), .blue.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.green.opacity(0.2),
-                        Color.blue.opacity(0.2)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .edgesIgnoringSafeArea(.all)
+                backgroundGradient.ignoresSafeArea()
 
-                VStack(spacing: 16) {
-                    VStack(spacing: 8) {
-                        Text("How are you feeling today?")
-                            .font(.headline)
+                ScrollView {
+                    VStack(spacing: 28) {
+                        Text("Ready for a thought upgrade?")
+                            .font(.system(size: 25, weight: .bold))
+                            .padding(.top)
 
-                        Picker("Select Mood", selection: $selectedMoodIndex) {
-                            ForEach(moods.indices, id: \.self) { i in
-                                HStack {
-                                    Text(moods[i].emoji)
-                                        .font(.largeTitle)
-                                    Text(moods[i].name)
+                        GroupBox(label: Label("Mood Check-In", systemImage: "face.smiling.fill")) {
+                            VStack(spacing: 10) {
+                                let moodList = moods
+
+                                Picker("Mood", selection: $selectedMoodIndex) {
+                                    ForEach(0..<moodList.count, id: \.self) { index in
+                                        let mood = moodList[index]
+                                        Text("\(mood.emoji) \(mood.name)").tag(index)
+                                    }
                                 }
-                                .tag(i)
+                                .pickerStyle(WheelPickerStyle())
+                                .frame(height: 100)
+
+                                Slider(value: $moodSlider, in: 0...100)
+                                    .tint(.cyan)
+
+                                HStack {
+                                    Text("Mood: \(moodLabel)")
+                                    Spacer()
+                                    Text("🎮 \(vibeBadge)")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                             }
+                            .padding(8)
                         }
-                        .pickerStyle(WheelPickerStyle())
-                        .frame(height: 120)
-                        .clipped()
-                    }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Reflect on Your Thought")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                        GroupBox(label: Label("Reflect on Your Thought", systemImage: "pencil")) {
+                            TextEditor(text: $userThought)
+                                .frame(height: 120)
+                                .padding(10)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
+                        }
 
-                        TextEditor(text: $userThought)
-                            .frame(height: 120)
-                            .padding(6)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                    }
+                        Button(action: {
+                            generateReframes()
+                        }) {
+                            Label("Flip the Script!", systemImage: "sparkles")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.green.gradient)
+                                .foregroundColor(.white)
+                                .cornerRadius(14)
+                        }
+                        .disabled(userThought.isEmpty)
 
-                    Button("Generate Reframes") {
-                        print("🧪 Sending thought to backend: \(userThought)")
-                        generateReframes()
-                    }
-                    .disabled(userThought.isEmpty)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                        if isLoading {
+                            ProgressView("flipping the script..")
+                        }
 
-                    if isLoading {
-                        ProgressView("Reframing with care...")
-                    }
-
-                    ScrollView {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 14) {
                             if reframes.isEmpty && !isLoading {
                                 Text("No reframes to show yet.")
                                     .foregroundColor(.gray)
                             }
+
                             ForEach(reframes, id: \.self) { reframe in
-                                VStack(alignment: .leading) {
-                                    HStack(alignment: .top) {
-                                        Text(reframe)
-                                            .foregroundColor(.black)
-                                            .multilineTextAlignment(.leading)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(reframe)
+                                        .foregroundColor(.primary)
 
+                                    HStack {
                                         Spacer()
-
-                                        Button(action: {
-                                            print("💾 Saved reframe: \(reframe)")
+                                        Button {
                                             saveReframe(reframe)
-                                        }) {
+                                        } label: {
                                             Image(systemName: "tray.and.arrow.down.fill")
                                                 .foregroundColor(.green)
                                         }
                                     }
                                 }
                                 .padding()
-                                .background(Color(red: 1.0, green: 0.95, blue: 0.75))
-                                .cornerRadius(10)
+                                .background(Color.yellow.opacity(0.15))
+                                .cornerRadius(12)
+                                .shadow(radius: 2)
                             }
                         }
-                        .padding(.top, 10)
-                    }
 
-                    NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
-                        Text("Check Your Garden")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.teal.opacity(0.7))
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        Text("\(plantEmoji) You’ve grown \(reframes.count) reframes today 🌱")
+                            .font(.caption)
+
+                        Text("📌 Daily Reframe Challenge\n\(challengePrompt)")
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+
+                        Text("🗯️ Affirmation of the Day\n\(affirmation)")
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+
+                        NavigationLink(destination: IslandView()) {
+                            Label("Check Your Island", systemImage: "tree.fill")
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.teal.gradient)
+                                .foregroundColor(.white)
+                                .cornerRadius(14)
+                        }
+
+                        .padding(.top, 10)
+                        .foregroundColor(.red)
+                    }
+                    .padding()
+                    .onAppear {
+                        affirmation = affirmations.randomElement() ?? "You matter 🌟"
+                        challengePrompt = challenges.randomElement() ?? "Reflect with kindness."
+                        logMoodForToday()
                     }
                 }
-                .padding(.horizontal)
-                .navigationTitle("Reframe a Thought")
                 .sheet(isPresented: $showPopup) {
                     ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
                 }
@@ -150,20 +224,17 @@ struct ThoughtInputView: View {
             }
 
             let lines = responseText.components(separatedBy: "\n")
-            let parsed = lines.compactMap { line -> String? in
+            let parsed = lines.compactMap { line in
                 if line.lowercased().starts(with: "logical:") ||
-                   line.lowercased().starts(with: "optimistic:") ||
-                   line.lowercased().starts(with: "compassionate:") {
+                    line.lowercased().starts(with: "optimistic:") ||
+                    line.lowercased().starts(with: "compassionate:") {
                     return line.trimmingCharacters(in: .whitespacesAndNewlines)
                 }
                 return nil
             }
 
             DispatchQueue.main.async {
-                print("✅ Parsed reframes: \(parsed)")
-                withAnimation {
-                    reframes = parsed
-                }
+                reframes = parsed
             }
         }
     }
@@ -178,6 +249,29 @@ struct ThoughtInputView: View {
         }
     }
 
+    func logMoodForToday() {
+        let userId = Auth.auth().currentUser?.uid ?? "unknown"
+        let mood = moods[selectedMoodIndex].name
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let today = dateFormatter.string(from: Date())
+
+        Firestore.firestore()
+            .collection("moodLogs")
+            .document(userId)
+            .collection("logs")
+            .document(today)
+            .setData([
+                "mood": mood,
+                "timestamp": FieldValue.serverTimestamp()
+            ]) { error in
+                if let error = error {
+                    print("❌ Mood log error: \(error.localizedDescription)")
+                } else {
+                    print("✅ Logged mood for today: \(mood)")
+                }
+            }
+    }
 }
 
 struct ReframePopup: View {
@@ -201,11 +295,10 @@ struct ReframePopup: View {
             }
 
             HStack(spacing: 16) {
-                Button(action: {
-                    print("📦 Popup save: \(reframe)")
+                Button {
                     saveAction(reframe)
                     dismiss()
-                }) {
+                } label: {
                     Image(systemName: "tray.and.arrow.down.fill")
                         .font(.title2)
                         .foregroundColor(.green)
@@ -219,8 +312,4 @@ struct ReframePopup: View {
         }
         .padding()
     }
-}
-
-#Preview {
-    ThoughtInputView()
 }
