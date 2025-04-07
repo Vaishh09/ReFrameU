@@ -246,3 +246,7 @@ struct MoodDetailPopup: View {
         }
     }
 }
+
+#Preview{
+    
+}
