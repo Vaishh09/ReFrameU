@@ -23,31 +23,33 @@ To set up the ReFrameU app locally, follow these steps:
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/Vaishh09/ReFrameU.git
-2. Navigate to the Project Directory
-bash
-Copy
-Edit
+```
+
+### 2. Navigate to the Project Directory
+```bash
 cd ReFrameU
-3. Open the Project in Xcode
-Open the ReFrameU.xcodeproj file using Xcode.
+```
 
-4. Install Dependencies
-Ensure all required dependencies are installed. If you're using CocoaPods, run:
+### 3. Open the Project in Xcode
+  Open the ReFrameU.xcodeproj file using Xcode.
 
-bash
-Copy
-Edit
+### 4. Install Dependencies
+  Ensure all required dependencies are installed. If you're using CocoaPods, run:
+
+```bash
 pod install
-5. Configure Firebase
-Go to the Firebase Console and create a new project.
+```
 
-Add a new iOS app to the Firebase project.
+### 5. Configure Firebase
+  Go to the Firebase Console and create a new project.
+  
+  Add a new iOS app to the Firebase project.
+  
+  Download the GoogleService-Info.plist file.
+  
+  Add the GoogleService-Info.plist file to the root of your Xcode project.
 
-Download the GoogleService-Info.plist file.
-
-Add the GoogleService-Info.plist file to the root of your Xcode project.
-
-6. Build and Run
-Select a simulator or connect a physical device.
-
-Press Cmd + R in Xcode to build and run the app.
+### 6. Build and Run
+  Select a simulator or connect a physical device.
+  
+  Press Cmd + R in Xcode to build and run the app.
