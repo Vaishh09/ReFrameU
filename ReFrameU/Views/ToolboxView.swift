@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - TOOLBOX VIEW
+
 struct ToolboxView: View {
     @State private var firestoreReframes: [String] = []
     @State private var searchText = ""

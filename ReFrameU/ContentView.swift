@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - MAIN TAB VIEW
+
 struct MainTabView: View {
     @State private var selectedTab: Tab = .reframe
     @State private var showMenu = false
@@ -131,6 +133,7 @@ struct MainTabView: View {
             }
             .foregroundColor(selectedTab == tab ? .blue : .gray)
         }
+        .accentColor(Color.blue)
     }
 }
 

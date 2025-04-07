@@ -93,6 +93,7 @@ struct ThoughtInputView: View {
                         Text("Ready for a thought upgrade?")
                             .font(.system(size: 25, weight: .bold))
                             .padding(.top)
+                            .foregroundColor(.primary)
 
                         GroupBox(label: Label("Mood Check-In", systemImage: "face.smiling.fill")) {
                             VStack(spacing: 10) {
@@ -130,6 +131,7 @@ struct ThoughtInputView: View {
                         }
 
                         Button(action: {
+                            print("🧪 Sending thought to backend: \(userThought)")
                             generateReframes()
                         }) {
                             Label("Flip the Script!", systemImage: "sparkles")
@@ -204,6 +206,7 @@ struct ThoughtInputView: View {
                         logMoodForToday()
                     }
                 }
+                .navigationTitle("")
                 .sheet(isPresented: $showPopup) {
                     ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
                 }
