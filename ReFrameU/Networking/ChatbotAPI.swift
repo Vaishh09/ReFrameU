@@ -8,7 +8,7 @@ class ChatbotAPI {
     static let shared = ChatbotAPI()
 
     func sendToReffie(_ message: String, completion: @escaping (String?) -> Void) {
-        guard let url = URL(string: "http://127.0.0.1:8000/chat") else { return } // Replace with LAN or deployed URL if needed
+        guard let url = URL(string: "https://reframeu.onrender.com/chat") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
