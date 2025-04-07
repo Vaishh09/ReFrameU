@@ -18,33 +18,36 @@ ReFrameU is an AI-powered iOS application designed to enhance emotional well-bei
 
 ## Installation
 
-To set up the ReFrameU app locally:
+To set up the ReFrameU app locally, follow these steps:
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/Vaishh09/ReFrameU.git
-Navigate to the Project Directory:
-
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Vaishh09/ReFrameU.git
+2. Navigate to the Project Directory
 bash
 Copy
 Edit
 cd ReFrameU
-Open the Project in Xcode: Open the ReFrameU.xcodeproj file with Xcode.
+3. Open the Project in Xcode
+Open the ReFrameU.xcodeproj file using Xcode.
 
-Install Dependencies: Ensure all necessary dependencies are installed. If using CocoaPods, run:
+4. Install Dependencies
+Ensure all required dependencies are installed. If you're using CocoaPods, run:
 
 bash
 Copy
 Edit
 pod install
-Configure Firebase:
+5. Configure Firebase
+Go to the Firebase Console and create a new project.
 
-Create a new project in the Firebase Console.
-
-Add a new iOS app to your Firebase project.
+Add a new iOS app to the Firebase project.
 
 Download the GoogleService-Info.plist file.
 
-Add the GoogleService-Info.plist file to the ReFrameU project in Xcode.
+Add the GoogleService-Info.plist file to the root of your Xcode project.
 
-Build and Run: Select the appropriate simulator or connected device and click 'Run' in Xcode.
+6. Build and Run
+Select a simulator or connect a physical device.
+
+Press Cmd + R in Xcode to build and run the app.
