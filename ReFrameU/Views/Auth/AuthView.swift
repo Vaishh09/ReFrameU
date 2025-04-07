@@ -9,11 +9,11 @@
 import SwiftUI
 
 struct AuthView: View {
-    @State private var isAuthenticated = false
+    @AppStorage("isAuthenticated") private var isAuthenticated = false
 
     var body: some View {
         if isAuthenticated {
-            ContentView()
+            MainTabView()
         } else {
             AuthContainerView(isAuthenticated: $isAuthenticated)
         }

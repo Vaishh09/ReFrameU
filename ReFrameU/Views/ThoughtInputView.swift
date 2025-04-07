@@ -17,6 +17,9 @@ struct ThoughtInputView: View {
     @State private var isLoading = false
     @State private var selectedReframe: String? = nil
     @State private var showPopup: Bool = false
+    @State private var moodSlider: Double = 50
+    @State private var affirmation = ""
+    @State private var challengePrompt = ""
 
     @AppStorage("savedReframes") private var savedReframes: String = ""
 
@@ -27,81 +30,132 @@ struct ThoughtInputView: View {
         ("Content", "😊"), ("Hopeful", "🌈")
     ]
 
+    let affirmations = [
+        "You’re doing better than you think 🌟",
+        "Small steps matter 💚",
+        "Breathe. You've got this. 💫",
+        "Every thought matters 🧠"
+    ]
+
+    let challenges = [
+        "Reframe a thought using only 5 words.",
+        "Be your own best friend.",
+        "Imagine someone kind replied to you.",
+        "What's the silver lining here?"
+    ]
+
+    var moodLabel: String {
+        switch moodSlider {
+        case 0..<30: return "😢 Low"
+        case 30..<70: return "😐 Neutral"
+        default: return "😄 High"
+        }
+    }
+
+    var plantEmoji: String {
+        switch reframes.count {
+        case 0...2: return "🌱"
+        case 3...5: return "🌿"
+        case 6...8: return "🌸"
+        default: return "🌳"
+        }
+    }
+
+    var vibeBadge: String {
+        let mood = moods[selectedMoodIndex].name
+        switch mood {
+        case "Angry": return "Fire Starter 🔥"
+        case "Tired": return "Gentle Cloud ☁️"
+        case "Happy": return "Joy Jumper 🌟"
+        default: return "Mind Explorer 🧭"
+        }
+    }
+
+    var backgroundGradient: LinearGradient {
+        switch moods[selectedMoodIndex].name {
+        case "Angry": return LinearGradient(colors: [.red.opacity(0.3), .orange.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        case "Peaceful": return LinearGradient(colors: [.purple.opacity(0.3), .blue.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        case "Sad": return LinearGradient(colors: [.blue.opacity(0.3), .gray.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        default: return LinearGradient(colors: [.purple.opacity(0.15), .blue.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.green.opacity(0.2),
-                        Color.blue.opacity(0.2)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .edgesIgnoringSafeArea(.all)
+                backgroundGradient
+                    .ignoresSafeArea()
 
-                VStack(spacing: 16) {
-                    VStack(spacing: 8) {
-                        Text("How are you feeling today?")
-                            .font(.headline)
+                ScrollView {
+                    VStack(spacing: 28) {
+                        Text("🌈 Reframe a Thought")
+                            .font(.largeTitle.bold())
+                            .padding(.top)
+                            .foregroundColor(.primary)
 
-                        Picker("Select Mood", selection: $selectedMoodIndex) {
-                            ForEach(moods.indices, id: \.self) { i in
-                                HStack {
-                                    Text(moods[i].emoji)
-                                        .font(.largeTitle)
-                                    Text(moods[i].name)
+                        GroupBox(label: Label("Mood Check-In", systemImage: "face.smiling.fill")) {
+                            VStack(spacing: 10) {
+                                Picker("Mood", selection: $selectedMoodIndex) {
+                                    ForEach(moods.indices, id: \.self) { i in
+                                        Text("\(moods[i].emoji) \(moods[i].name)").tag(i)
+                                    }
                                 }
-                                .tag(i)
+                                .pickerStyle(WheelPickerStyle())
+                                .frame(height: 100)
+
+                                Slider(value: $moodSlider, in: 0...100)
+                                    .tint(.cyan)
+
+                                HStack {
+                                    Text("Mood: \(moodLabel)")
+                                    Spacer()
+                                    Text("🎮 \(vibeBadge)")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                             }
+                            .padding(8)
                         }
-                        .pickerStyle(WheelPickerStyle())
-                        .frame(height: 120)
-                        .clipped()
-                    }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Reflect on Your Thought")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                        GroupBox(label: Label("Reflect on Your Thought", systemImage: "pencil")) {
+                            TextEditor(text: $userThought)
+                                .frame(height: 120)
+                                .padding(10)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
+                        }
 
-                        TextEditor(text: $userThought)
-                            .frame(height: 120)
-                            .padding(6)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                    }
+                        Button(action: {
+                            print("🧪 Sending thought to backend: \(userThought)")
+                            generateReframes()
+                        }) {
+                            Label("Generate Reframes", systemImage: "sparkles")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.green.gradient)
+                                .foregroundColor(.white)
+                                .cornerRadius(14)
+                        }
+                        .disabled(userThought.isEmpty)
 
-                    Button("Generate Reframes") {
-                        print("🧪 Sending thought to backend: \(userThought)")
-                        generateReframes()
-                    }
-                    .disabled(userThought.isEmpty)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                        if isLoading {
+                            ProgressView("Reframing with care...")
+                        }
 
-                    if isLoading {
-                        ProgressView("Reframing with care...")
-                    }
-
-                    ScrollView {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 14) {
                             if reframes.isEmpty && !isLoading {
                                 Text("No reframes to show yet.")
                                     .foregroundColor(.gray)
                             }
+
                             ForEach(reframes, id: \.self) { reframe in
-                                VStack(alignment: .leading) {
-                                    HStack(alignment: .top) {
-                                        Text(reframe)
-                                            .foregroundColor(.black)
-                                            .multilineTextAlignment(.leading)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(reframe)
+                                        .foregroundColor(.primary)
 
+                                    HStack {
                                         Spacer()
-
                                         Button(action: {
                                             print("💾 Saved reframe: \(reframe)")
                                             saveReframe(reframe)
@@ -112,24 +166,54 @@ struct ThoughtInputView: View {
                                     }
                                 }
                                 .padding()
-                                .background(Color(red: 1.0, green: 0.95, blue: 0.75))
-                                .cornerRadius(10)
+                                .background(Color.yellow.opacity(0.15))
+                                .cornerRadius(12)
+                                .shadow(radius: 2)
                             }
                         }
-                        .padding(.top, 10)
-                    }
 
-                    NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
-                        Text("Check Your Garden")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.teal.opacity(0.7))
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        VStack(spacing: 6) {
+                            Text("\(plantEmoji) Your Thought Garden")
+                                .font(.title3.bold())
+                            Text("You’ve grown \(reframes.count) reframes today 🌱")
+                                .font(.caption)
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("📌 Daily Reframe Challenge")
+                                .font(.headline)
+                            Text(challengePrompt)
+                                .font(.subheadline)
+                                .italic()
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("🗯️ Affirmation of the Day")
+                                .font(.headline)
+                            Text(affirmation)
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+
+                        NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
+                            Label("Check Your Garden", systemImage: "leaf.fill")
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.teal.gradient)
+                                .foregroundColor(.white)
+                                .cornerRadius(14)
+                        }
+                    }
+                    .padding()
+                    .onAppear {
+                        affirmation = affirmations.randomElement() ?? "You matter 🌟"
+                        challengePrompt = challenges.randomElement() ?? "Reflect with kindness."
                     }
                 }
-                .padding(.horizontal)
-                .navigationTitle("Reframe a Thought")
+                .navigationTitle("")
                 .sheet(isPresented: $showPopup) {
                     ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
                 }
@@ -177,7 +261,6 @@ struct ThoughtInputView: View {
             }
         }
     }
-
 }
 
 struct ReframePopup: View {

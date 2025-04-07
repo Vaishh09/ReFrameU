@@ -1,6 +1,8 @@
 import SwiftUI
 
-struct ContentView: View {
+// MARK: - MAIN TAB VIEW
+
+struct MainTabView: View {
     var body: some View {
         TabView {
             NavigationStack {
@@ -24,6 +26,6 @@ struct ContentView: View {
                 Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
             }
         }
-        .accentColor(Color("blue"))
+        .accentColor(Color.blue)
     }
 }
