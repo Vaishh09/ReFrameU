@@ -129,9 +129,52 @@ struct ThoughtInputView: View {
                     }
                 }
                 .padding(.horizontal)
-                .navigationTitle("Reframe a Thought")
                 .sheet(isPresented: $showPopup) {
                     ReframePopup(reframe: selectedReframe ?? "", saveAction: saveReframe)
+                }
+            }
+            .navigationBarBackButtonHidden(true)   // hides back button
+            .navigationBarHidden(true)             // hides entire top bar
+            .toolbar {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    NavigationLink(destination: SettingsView()) {
+                        VStack {
+                            Image(systemName: "gearshape")
+                            Text("Settings")
+                        }
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
+                        VStack {
+                            Image(systemName: "heart.text.square")
+                            Text("Mood")
+                        }
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: JournalView()) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.largeTitle)
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: ProfileView()) {
+                        VStack {
+                            Image(systemName: "person.crop.circle")
+                            Text("Profile")
+                        }
+                    }
+                    Spacer()
+
+                    Button {
+                        print("You are already on Reframe page!")
+                    } label: {
+                        VStack {
+                            Image(systemName: "quote.bubble.fill")
+                            Text("Reframe")
+                        }
+                    }
                 }
             }
         }
@@ -177,7 +220,6 @@ struct ThoughtInputView: View {
             }
         }
     }
-
 }
 
 struct ReframePopup: View {

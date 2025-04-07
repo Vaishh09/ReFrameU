@@ -112,22 +112,65 @@ struct MoodProgressView: View {
                     .padding()
                 }
             }
-        }
-        .onAppear {
-                    if let mood = moodToLog {
-                        logMood(for: mood)
+            .toolbar {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    NavigationLink(destination: SettingsView()) {
+                        VStack {
+                            Image(systemName: "gearshape")
+                            Text("Settings")
+                        }
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: MoodProgressView(moodToLog: nil)) {
+                        VStack {
+                            Image(systemName: "heart.text.square")
+                            Text("Mood")
+                        }
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: JournalView()) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.largeTitle)
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: ProfileView()) {
+                        VStack {
+                            Image(systemName: "person.crop.circle")
+                            Text("Profile")
+                        }
+                    }
+                    Spacer()
+
+                    NavigationLink(destination: ThoughtInputView()) {
+                        VStack {
+                            Image(systemName: "quote.bubble.fill")
+                            Text("Reframe")
+                        }
                     }
                 }
+            }
+        }
+        .onAppear {
+            if let mood = moodToLog {
+                logMood(for: mood)
+            }
+        }
     }
 
     func logMood(for mood: String? = nil) {
-            let moodName = mood ?? days[moodLog.count % 7]
-            moodLog.append(moodName)
-            if moodLog.count % 3 == 0 {
-                level += 1
-            }
-            streak += 1
-        FirestoreManager.shared.saveMood(name: moodName, emoji: "🌿")
+        let moodName = mood ?? days[moodLog.count % 7]
+        moodLog.append(moodName)
+        if moodLog.count % 3 == 0 {
+            level += 1
         }
+        streak += 1
+        FirestoreManager.shared.saveMood(name: moodName, emoji: "🌿")
+    }
 }
 
+#Preview {
+    MoodProgressView()
+}
