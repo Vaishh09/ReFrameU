@@ -1,4 +1,3 @@
-// MARK: - MOOD PROGRESS VIEW
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
@@ -32,29 +31,6 @@ struct MoodProgressView: View {
                             Text(dayAbbreviations[index])
                                 .fontWeight(.bold)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.green)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-
-                        Button("Did you log today?") {
-                            if let mood = moodToLog {
-                                logMood(for: mood)
-                            }
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.teal)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-
-                        VStack(spacing: 6) {
-                            Text("\(plantEmoji) Garden Level: \(level)")
-                                .font(.title3)
-                            if streak >= 3 {
-                                Text("🔥 \(streak)-day Streak!")
-                                    .foregroundColor(.orange)
-                            }
                         }
 
                         ForEach(calendarDates, id: \.self) { date in
@@ -269,4 +245,8 @@ struct MoodDetailPopup: View {
         default: return "🌿"
         }
     }
+}
+
+#Preview{
+    
 }
